@@ -11,8 +11,10 @@
     <dependencies>
         <dependency>
             <groupId>nu.pattern</groupId>
-            <artifactId>opencv</artifactId>
+            <artifactId>opencv-windows</artifactId>
+            <scope>system</scope>
             <version>2.4.9-7</version>
+            <systemPath>${project.basedir}/src/main/resources/opencv-2.4.9-7.jar</systemPath>
         </dependency>
     </dependencies>
 </project>
