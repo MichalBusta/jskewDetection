@@ -18,7 +18,7 @@ public class TestOpenCVSkew {
 	public static void main(String[] args) {
 		
 		//read image
-		Mat img = Highgui.imread(TestOpenCVSkew.class.getResource("/TimesNewRoman-Italic-sixsided.bin.png").getPath());
+		Mat img = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png");
 		//show image in window 
 		OCVUtils.showImage(img);
 		
