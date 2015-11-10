@@ -6,8 +6,11 @@ import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
+
+
+
 public class TestOpenCVSkew {
-	
+
 	static {
 		nu.pattern.OpenCV.loadShared();
 	}
@@ -16,7 +19,7 @@ public class TestOpenCVSkew {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		
+
 		//read image
 		Mat img = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png");
 		//show image in window 
@@ -30,10 +33,12 @@ public class TestOpenCVSkew {
 		OCVUtils.showImage(dst);
 		
 		//now we set some skew value  .... 
-		m.put(0, 1, Math.tan(Math.PI / 16) );
+		m.put(0, 1, Math.tan(Math.PI /16) );
 		Imgproc.warpAffine(img, dst, m, img.size(), Imgproc.INTER_LINEAR, Imgproc.BORDER_CONSTANT, new Scalar(255, 255, 255));
 		// and display result  
 		OCVUtils.showImage(dst);
+
+
 	}
 
 }
