@@ -68,8 +68,8 @@ public class VerticalDominant {
 
         // try all angles in the range of +-45� from the original one, compare the entropy
         for (int a = 1; a < 45; a++) {
-            Mat edited = invImg.clone();
-            //try the positive angle
+            Mat edited = new Mat();
+            //try the positive angl   e
             m.put(0, 1, Math.tan(Math.toRadians(a)));
             System.out.println(m.dump());
             Imgproc.warpAffine(invImg, edited, m, invImg.size());
