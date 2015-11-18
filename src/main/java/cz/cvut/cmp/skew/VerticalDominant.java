@@ -12,7 +12,7 @@ import static org.opencv.core.Core.bitwise_not;
 import static org.opencv.core.Core.reduce;
 
 /**
- * Created by Jááááá on 10. 11. 2015.
+ * Created by Jï¿½ï¿½ï¿½ï¿½ï¿½ on 10. 11. 2015.
  */
 public class VerticalDominant {
 
@@ -51,7 +51,9 @@ public class VerticalDominant {
         // invert the colours
         Mat invImg = new Mat();
         bitwise_not(img, invImg);
-
+        //we will extend image with border on left and right side of the image, because of the image 
+        Imgproc.copyMakeBorder(invImg, invImg, 0, 0, invImg.rows(), invImg.rows(), Imgproc.BORDER_CONSTANT);
+        
         // get the histogram matrix
         Mat rowSumImg = new Mat();
         Core.reduce(invImg, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
@@ -64,11 +66,12 @@ public class VerticalDominant {
         result[0] = entropy;
         result[1] = angle;
 
-        // try all angles in the range of +-45° from the original one, compare the entropy
+        // try all angles in the range of +-45ï¿½ from the original one, compare the entropy
         for (int a = 1; a < 45; a++) {
-            Mat edited = invImg;
+            Mat edited = invImg.clone();
             //try the positive angle
             m.put(0, 1, Math.tan(Math.toRadians(a)));
+            System.out.println(m.dump());
             Imgproc.warpAffine(invImg, edited, m, invImg.size());
             angle = a;
             Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
@@ -76,6 +79,7 @@ public class VerticalDominant {
             if (entropy < result[0]) {
                 result[0] = entropy;
                 result[1] = angle;
+                OCVUtils.showImage(edited);
             }
             else {
                 System.out.println(angle);
@@ -86,12 +90,10 @@ public class VerticalDominant {
             m.put(0, 1, Math.tan(Math.toRadians(-a)));
             Imgproc.warpAffine(invImg, edited, m, invImg.size());
             angle =-a;
-            if (a < 5){
-                OCVUtils.showImage(edited);
-            }
             Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
             entropy = calculateEntropy(rowSumImg);
             if (entropy < result[0]) {
+            	OCVUtils.showImage(edited);
                 result[0] = entropy;
                 result[1] = angle;
             }

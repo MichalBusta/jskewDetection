@@ -19,6 +19,7 @@ public class TestOCVOperations {
 		
 		Mat img = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png", Highgui.IMREAD_GRAYSCALE);
 		Core.bitwise_not(img, img); //invert image
+		OCVUtils.showImage(img);
 		Mat dst = new Mat();
 		Core.reduce(img, dst, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
 		
