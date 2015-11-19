@@ -11,6 +11,14 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" name="Maven: nu.pattern:opencv:2.4.9-7" level="project" />
+    <orderEntry type="module-library">
+      <library name="Maven: nu.pattern:opencv-windows:2.4.9-7">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/src/main/resources/opencv-2.4.9-7.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
