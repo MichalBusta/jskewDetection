@@ -43,11 +43,7 @@ public class VerticalDominant {
         return -entropie;
     }
 
-    public static void main(String[] args) {
-
-        // read image
-        Mat img = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png", Highgui.IMREAD_GRAYSCALE);
-
+    public int getTheRightSkew(Mat img) {
         // invert the colours
         Mat invImg = new Mat();
         bitwise_not(img, invImg);
@@ -76,17 +72,16 @@ public class VerticalDominant {
             if (entropy < result[0]) {
                 result[0] = entropy;
                 result[1] = angle;
-            }
-            else {
+            } else {
                 System.out.println(angle);
-                System.out.println(result[0]+" < "+entropy);
+                System.out.println(result[0] + " < " + entropy);
             }
 
             //try the negative angle
-            m.put(0, 1, Math.tan(Math.toRadians(-a)));
+            m.put(0, 1, Math.tan(-Math.toRadians(a)));
             Imgproc.warpAffine(invImg, edited, m, invImg.size());
-            angle =-a;
-            if (a < 5){
+            angle = -a;
+            if (a < 35 && a > 30) {
                 OCVUtils.showImage(edited);
             }
             Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
@@ -94,56 +89,52 @@ public class VerticalDominant {
             if (entropy < result[0]) {
                 result[0] = entropy;
                 result[1] = angle;
-            }
-            else {
+            } else {
                 System.out.println(angle);
-                    System.out.println(result[0]+" < "+entropy);
+                System.out.println(result[0] + " < " + entropy);
             }
         }
-        System.out.println("Vysledek: "+result[0] + " " + result[1]);
+        return (int) result[1];
+    }
 
+    /**
 
+    public static void main(String[] args) {
 
-        /**
+        // read image
+        Mat img = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png", Highgui.IMREAD_GRAYSCALE);
 
-         //read image
-         Mat img = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png", Highgui.IMREAD_GRAYSCALE);
+        // invert the colours
+        Mat invImg = new Mat();
+        bitwise_not(img, invImg);
 
-         // invert the colours
-         Mat invImg = new Mat();
-         bitwise_not(img, invImg);
+        // create vertical projection
+        Mat rowSumImg = new Mat();
+        Core.reduce(invImg, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
 
-         // create vertical projection
-         Mat rowSumImg = new Mat();
-         Core.reduce(invImg, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
+        System.out.println();
 
-         System.out.println();
+        //calculate the entropy
 
-         //calculate the entropy
-
-       double entropie = calculateEntropy(rowSumImg);
-
-
-
-
-         System.out.println("Entropie puvodniho:" + (entropie));
-
-
-         Mat m = Mat.eye(2, 3, CvType.CV_32FC1);
-         m.put(0, 1, Math.tan(15*0.017));
-         Mat rightSkew = new Mat();
-         Imgproc.warpAffine(invImg, rightSkew, m, invImg.size());
-         OCVUtils.showImage(rightSkew);
-
-         Mat rowSumImg2 = new Mat();
-         Core.reduce(rightSkew, rowSumImg2, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
-
-         entropie = calculateEntropy(rowSumImg2);
-
-
+        double entropie = calculateEntropy(rowSumImg);
 
 
         System.out.println("Entropie puvodniho:" + (entropie));
-        */
+
+
+        Mat m = Mat.eye(2, 3, CvType.CV_32FC1);
+        m.put(0, 1, Math.tan(15 * 0.017));
+        Mat rightSkew = new Mat();
+        Imgproc.warpAffine(invImg, rightSkew, m, invImg.size());
+        OCVUtils.showImage(rightSkew);
+
+        Mat rowSumImg2 = new Mat();
+        Core.reduce(rightSkew, rowSumImg2, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
+
+        entropie = calculateEntropy(rowSumImg2);
+
+
+        System.out.println("Entropie puvodniho:" + (entropie));
     }
+     */
 }
