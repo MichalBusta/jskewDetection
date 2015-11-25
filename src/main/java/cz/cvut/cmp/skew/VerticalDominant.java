@@ -12,9 +12,9 @@ import static org.opencv.core.Core.bitwise_not;
 import static org.opencv.core.Core.reduce;
 
 /**
- * Created by Jááááá on 10. 11. 2015.
+ * Created by Jï¿½ï¿½ï¿½ï¿½ï¿½ on 10. 11. 2015.
  */
-public class VerticalDominant {
+public class VerticalDominant extends SkewEstimator {
 
     static {
         nu.pattern.OpenCV.loadShared();
@@ -43,10 +43,13 @@ public class VerticalDominant {
         return -entropie;
     }
 
-    public int getTheRightSkew(Mat img) {
+    public double estimateSkew(Mat img) {
         // invert the colours
         Mat invImg = new Mat();
         bitwise_not(img, invImg);
+
+        //we will extend image with border on left and right side of the image, because of the image
+        Imgproc.copyMakeBorder(invImg, invImg, 0, 0, invImg.rows(), invImg.rows(), Imgproc.BORDER_CONSTANT);
 
         // get the histogram matrix
         Mat rowSumImg = new Mat();
@@ -54,87 +57,49 @@ public class VerticalDominant {
 
         // find the skew
         double[] result = new double[2];
-        Mat m = Mat.eye(2, 3, CvType.CV_32FC1);
         double entropy = calculateEntropy(rowSumImg);
         double angle = 0;
         result[0] = entropy;
         result[1] = angle;
 
-        // try all angles in the range of +-45° from the original one, compare the entropy
+        // try all angles in the range of +-45d from the initial one, compare the entropy
         for (int a = 1; a < 45; a++) {
-            Mat edited = invImg;
+            Mat edited = new Mat();
             //try the positive angle
-            m.put(0, 1, Math.tan(Math.toRadians(a)));
-            Imgproc.warpAffine(invImg, edited, m, invImg.size());
-            angle = a;
+            skewImage(invImg, edited, Math.toRadians(a));
+            // ??   System.out.println(m.dump()); -> prints the matrix
             Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
             entropy = calculateEntropy(rowSumImg);
             if (entropy < result[0]) {
                 result[0] = entropy;
-                result[1] = angle;
-            } else {
-                System.out.println(angle);
-                System.out.println(result[0] + " < " + entropy);
+                result[1] = a;
+                OCVUtils.showImage(edited);
             }
 
             //try the negative angle
-            m.put(0, 1, Math.tan(-Math.toRadians(a)));
-            Imgproc.warpAffine(invImg, edited, m, invImg.size());
-            angle = -a;
-            if (a < 35 && a > 30) {
-                OCVUtils.showImage(edited);
-            }
+            skewImage(invImg, edited, Math.toRadians(-a));
             Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
             entropy = calculateEntropy(rowSumImg);
             if (entropy < result[0]) {
+                OCVUtils.showImage(edited);
                 result[0] = entropy;
-                result[1] = angle;
-            } else {
-                System.out.println(angle);
-                System.out.println(result[0] + " < " + entropy);
+                result[1] = -a;
             }
         }
-        return (int) result[1];
+        return result[1];
     }
-
-    /**
 
     public static void main(String[] args) {
 
         // read image
         Mat img = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png", Highgui.IMREAD_GRAYSCALE);
 
-        // invert the colours
-        Mat invImg = new Mat();
-        bitwise_not(img, invImg);
+        // estimate skew
+        SkewEstimator est = new VerticalDominant();
+        double skewAngle = est.estimateSkew(img);
 
-        // create vertical projection
-        Mat rowSumImg = new Mat();
-        Core.reduce(invImg, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
-
-        System.out.println();
-
-        //calculate the entropy
-
-        double entropie = calculateEntropy(rowSumImg);
+        System.out.println(skewAngle);
 
 
-        System.out.println("Entropie puvodniho:" + (entropie));
-
-
-        Mat m = Mat.eye(2, 3, CvType.CV_32FC1);
-        m.put(0, 1, Math.tan(15 * 0.017));
-        Mat rightSkew = new Mat();
-        Imgproc.warpAffine(invImg, rightSkew, m, invImg.size());
-        OCVUtils.showImage(rightSkew);
-
-        Mat rowSumImg2 = new Mat();
-        Core.reduce(rightSkew, rowSumImg2, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
-
-        entropie = calculateEntropy(rowSumImg2);
-
-
-        System.out.println("Entropie puvodniho:" + (entropie));
     }
-     */
 }

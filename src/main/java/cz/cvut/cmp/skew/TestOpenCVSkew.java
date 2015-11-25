@@ -37,7 +37,7 @@ public class TestOpenCVSkew {
         OCVUtils.showImage(dst);
 
         VerticalDominant vd = new VerticalDominant();
-        System.out.println("Uhel sklonu: " + vd.getTheRightSkew(img));
+        System.out.println("Uhel sklonu: " );
 
 
     }
