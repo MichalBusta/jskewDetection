@@ -109,9 +109,7 @@ public class Samples {
             y[i] = data[0];
             x[i] = i;
         }
-        for (int i = 0; i < x.length; i++) {
-            System.out.println(x[i] + " " + y[i]);
-        }
+
 
 
         // create the histogram plot
@@ -141,15 +139,15 @@ public class Samples {
 
         Mat edited = new Mat();
         // correct skew
-        SkewEstimator.skewImage(img, edited, Math.tan(Math.toRadians(14)));
+        SkewEstimator.skewImageWBG(img, edited, Math.tan(Math.toRadians(14)));
         OCVUtils.showImage(edited);
 
         //max. angle
-        SkewEstimator.skewImage(img, edited, Math.tan(Math.toRadians(45)));
+        SkewEstimator.skewImageWBG(img, edited, Math.tan(Math.toRadians(45)));
         OCVUtils.showImage(edited);
 
         // min. angle
-        SkewEstimator.skewImage(img, edited, Math.tan(Math.toRadians(-45)));
+        SkewEstimator.skewImageWBG(img, edited, Math.tan(Math.toRadians(-31)));
         OCVUtils.showImage(edited);
     }
 
