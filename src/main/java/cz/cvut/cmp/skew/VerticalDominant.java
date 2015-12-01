@@ -47,7 +47,6 @@ public class VerticalDominant extends SkewEstimator {
         // invert the colours
         Mat invImg = new Mat();
         bitwise_not(img, invImg);
-
         //we will extend image with border on left and right side of the image, because of the image
         Imgproc.copyMakeBorder(invImg, invImg, 0, 0, invImg.rows(), invImg.rows(), Imgproc.BORDER_CONSTANT);
 
@@ -73,15 +72,15 @@ public class VerticalDominant extends SkewEstimator {
             if (entropy < result[0]) {
                 result[0] = entropy;
                 result[1] = a;
-                OCVUtils.showImage(edited);
+                //OCVUtils.showImage(edited);
             }
-
+            
             //try the negative angle
             skewImage(invImg, edited, Math.toRadians(-a));
             Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
             entropy = calculateEntropy(rowSumImg);
             if (entropy < result[0]) {
-                OCVUtils.showImage(edited);
+                //OCVUtils.showImage(edited);
                 result[0] = entropy;
                 result[1] = -a;
             }

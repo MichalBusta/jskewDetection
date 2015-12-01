@@ -15,7 +15,7 @@ import java.awt.*;
 import static org.opencv.core.Core.bitwise_not;
 
 /**
- * Created by Jááááá on 21. 11. 2015.
+ * Created by Jï¿½ï¿½ï¿½ï¿½ï¿½ on 21. 11. 2015.
  */
 public class Samples {
     static {
@@ -78,6 +78,10 @@ public class Samples {
         // cusotmize the y axis
         plot.setFixedBounds(1, 4.2, 4.8);
         plot.setAxisLabel(1, "ENTROPY");
+        
+        //Bigger fonts for presentation
+        plot.getAxis(1).setLabelFont(new Font("Arial", Font.BOLD, 20));
+        plot.getAxis(0).setLabelFont(new Font("Arial", Font.BOLD, 20));
 
         JFrame frame = new JFrame("a plot panel");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -141,14 +145,17 @@ public class Samples {
         // correct skew
         SkewEstimator.skewImageWBG(img, edited, Math.tan(Math.toRadians(14)));
         OCVUtils.showImage(edited);
+        Highgui.imwrite("/tmp/correct.jpg", edited);
 
         //max. angle
         SkewEstimator.skewImageWBG(img, edited, Math.tan(Math.toRadians(45)));
         OCVUtils.showImage(edited);
+        Highgui.imwrite("/tmp/skew45.jpg", edited);
 
         // min. angle
         SkewEstimator.skewImageWBG(img, edited, Math.tan(Math.toRadians(-31)));
         OCVUtils.showImage(edited);
+        Highgui.imwrite("/tmp/skewm31.jpg", edited);
     }
 
     public static void main(String[] args) {

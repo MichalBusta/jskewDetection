@@ -37,23 +37,14 @@ public class OCVUtils {
 
 				@Override
 				public void keyPressed(KeyEvent arg0) {
-					// TODO Auto-generated method stub
-					dlg.dispatchEvent(new WindowEvent(dlg, WindowEvent.WINDOW_CLOSING));
-					
+					dlg.dispatchEvent(new WindowEvent(dlg, WindowEvent.WINDOW_CLOSING));	
 				}
-
 				@Override
-				public void keyReleased(KeyEvent arg0) {
-					// TODO Auto-generated method stub
-					
+				public void keyReleased(KeyEvent arg0) {	
 				}
-
 				@Override
 				public void keyTyped(KeyEvent arg0) {
-					// TODO Auto-generated method stub
-					
 				}
-	        	
 	        });
 	        dlg.getContentPane().add(new JLabel(new ImageIcon(bufImage)));
 	        dlg.pack();
@@ -62,7 +53,6 @@ public class OCVUtils {
 	    } catch (Exception e) {
 	        throw new RuntimeException(e);
 	    }
-		
 	}
 
 }

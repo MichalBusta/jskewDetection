@@ -23,6 +23,10 @@ public class TestMatPlot {
 
         // add a line plot to the PlotPanel
         plot.addLinePlot("my plot", x, y);
+        plot.setFixedBounds(0, 0, 10);
+        plot.setFixedBounds(1, -10, 10);
+        
+        plot.getAxis(0).setLightLabels();
         
         JFrame frame = new JFrame("a plot panel");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
