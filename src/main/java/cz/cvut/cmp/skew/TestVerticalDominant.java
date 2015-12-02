@@ -84,7 +84,9 @@ public class TestVerticalDominant {
         		// read the image
         		System.out.println(entry.toAbsolutePath());
         		Mat img = Highgui.imread(entry.toAbsolutePath().toString(), Highgui.IMREAD_GRAYSCALE);
-        		Imgproc.copyMakeBorder(img, img, 0, 0, img.rows(), img.rows(), Imgproc.BORDER_CONSTANT, new Scalar(255, 255, 255));
+                if (img.cols() == 0)
+                    continue;
+                Imgproc.copyMakeBorder(img, img, 0, 0, img.rows(), img.rows(), Imgproc.BORDER_CONSTANT, new Scalar(255, 255, 255));
         		//get random angle
         		int randomAngle = random.nextInt(20);
         		skewValue[a] = randomAngle;
