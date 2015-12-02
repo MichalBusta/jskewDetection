@@ -77,6 +77,7 @@ public class TestVerticalDominant {
         
         Path dir  = Paths.get("/textspotter/SkewDetection/google4");
         int a = 0;
+        Random random = new Random();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{png}")) {
         	for (Path entry: stream) {
         		
@@ -85,7 +86,6 @@ public class TestVerticalDominant {
         		Mat img = Highgui.imread(entry.toAbsolutePath().toString(), Highgui.IMREAD_GRAYSCALE);
         		Imgproc.copyMakeBorder(img, img, 0, 0, img.rows(), img.rows(), Imgproc.BORDER_CONSTANT, new Scalar(255, 255, 255));
         		//get random angle
-        		Random random = new Random();
         		int randomAngle = random.nextInt(20);
         		skewValue[a] = randomAngle;
 
