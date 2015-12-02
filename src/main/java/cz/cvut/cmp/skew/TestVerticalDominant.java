@@ -7,6 +7,8 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
 import org.opencv.core.Mat;
@@ -14,12 +16,27 @@ import org.opencv.core.Scalar;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
+
 /**
  * Created by J����� on 25. 11. 2015.
  */
 public class TestVerticalDominant {
-    double[] skewValue;
-    double[] skewEstimate;
+
+    class EstimRestult {
+
+        public EstimRestult(double skewValue, double skewEstimate, String name) {
+            this.skewValue = skewValue;
+            this.skewEstimate = skewEstimate;
+            this.name = name;
+        }
+
+        public double skewValue;
+        public double skewEstimate;
+        public String name;
+    }
+
+
+    List<EstimRestult> resutlts = new LinkedList<EstimRestult>();
     int[] difference; // (skewValue-SkewEstimate)
     String[] paths; // paths to the test images
     int totalImageNumber;
@@ -71,8 +88,6 @@ public class TestVerticalDominant {
     // test the estimator using random skew values
     public void testImages(String[] paths) {
         correctEstimations = 0;
-        skewValue = new double[paths.length];
-        skewEstimate = new double[paths.length];
         SkewEstimator est = new VerticalDominant();
         
         Path dir  = Paths.get("/textspotter/SkewDetection/google4");
@@ -85,29 +100,28 @@ public class TestVerticalDominant {
         		System.out.println(entry.toAbsolutePath());
         		Mat img = Highgui.imread(entry.toAbsolutePath().toString(), Highgui.IMREAD_GRAYSCALE);
                 if (img.cols() == 0)
-                    continue;
+                    continue; //TODO !! fix this
                 Imgproc.copyMakeBorder(img, img, 0, 0, img.rows(), img.rows(), Imgproc.BORDER_CONSTANT, new Scalar(255, 255, 255));
         		//get random angle
         		int randomAngle = random.nextInt(20);
-        		skewValue[a] = randomAngle;
 
         		// skew the image
         		Mat edited = new Mat();
         		SkewEstimator.skewImageWBG(img, edited, Math.toRadians(randomAngle));
+                EstimRestult res = new EstimRestult(randomAngle, est.estimateSkew(edited), entry.toAbsolutePath().toString());
+                resutlts.add(res);
 
-        		// estimate the skew
-        		skewEstimate[a] = est.estimateSkew(edited);
-        		System.out.println("Uhel: " + skewValue[a] + "; Odhad: " + skewEstimate[a]);
+                System.out.println("Uhel: " + res.skewValue + "; Odhad: " + res.skewEstimate);
 
-        		if ( Math.abs((skewEstimate[a] + randomAngle)) < 4 ){
-        			this.correctEstimations++;
+                if (Math.abs((res.skewEstimate + res.skewValue)) < 4) {
+                    this.correctEstimations++;
         		}
         		else {
         			OCVUtils.showImage(img);
         			OCVUtils.showImage(edited);
         			Mat narrowed = new Mat();
-        			SkewEstimator.skewImage(edited, narrowed, Math.toRadians(skewEstimate[a]));
-        			OCVUtils.showImage(narrowed);
+                    SkewEstimator.skewImage(edited, narrowed, Math.toRadians(res.skewEstimate));
+                    OCVUtils.showImage(narrowed);
         		}
         		System.out.println(String.format("Recall: {%f}", this.correctEstimations / new Float(a)));
         		a++;
