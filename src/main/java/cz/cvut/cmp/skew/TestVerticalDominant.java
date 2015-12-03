@@ -74,8 +74,8 @@ public class TestVerticalDominant {
         skewValue = new double[paths.length];
         skewEstimate = new double[paths.length];
         SkewEstimator est = new VerticalDominant();
-        
-        Path dir  = Paths.get("/textspotter/SkewDetection/google4");
+
+        Path dir = Paths.get("src/main/resources/google4");
         int a = 0;
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{png}")) {
         	for (Path entry: stream) {
@@ -119,13 +119,24 @@ public class TestVerticalDominant {
 		}
     }
 
-    public void calculateStandardDeviation() {
-    	
+    public double calculateStandardDeviation() {
+        double dispersion = 0;
+        double mean;
+
+        double sum = 0;
+        for (int a = 0; a < skewEstimate.length; a++) {
+            sum = sum + Math.abs(skewEstimate[a] - skewValue[a]);
+        }
+        mean = sum / skewEstimate.length;
+        for (int a = 0; a < skewEstimate.length; a++) {
+            dispersion = dispersion + (((skewEstimate[a] - skewValue[a]) - mean) * ((skewEstimate[a] - skewValue[a]) - mean));
+        }
+        return Math.sqrt(dispersion) / skewValue.length;
     }
 
     public static void main(String[] args) {
         TestVerticalDominant tvd = new TestVerticalDominant();
-        tvd.paths = tvd.getFileNames("/textspotter/SkewDetection/google4");
+        tvd.paths = tvd.getFileNames("src/main/resources/google4");
         tvd.testImages(tvd.paths);
     }
 }
