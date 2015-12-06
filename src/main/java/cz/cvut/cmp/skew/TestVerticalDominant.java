@@ -22,9 +22,9 @@ import org.opencv.imgproc.Imgproc;
  */
 public class TestVerticalDominant {
 
-    class EstimRestult {
+    class EstimResult {
 
-        public EstimRestult(double skewValue, double skewEstimate, String name) {
+        public EstimResult(double skewValue, double skewEstimate, String name) {
             this.skewValue = skewValue;
             this.skewEstimate = skewEstimate;
             this.name = name;
@@ -36,7 +36,7 @@ public class TestVerticalDominant {
     }
 
 
-    List<EstimRestult> resutlts = new LinkedList<EstimRestult>();
+    List<EstimResult> resutlts = new LinkedList<EstimResult>();
     int[] difference; // (skewValue-SkewEstimate)
     String[] paths; // paths to the test images
     int totalImageNumber;
@@ -108,7 +108,7 @@ public class TestVerticalDominant {
         		// skew the image
         		Mat edited = new Mat();
         		SkewEstimator.skewImageWBG(img, edited, Math.toRadians(randomAngle));
-                EstimRestult res = new EstimRestult(randomAngle, est.estimateSkew(edited), entry.toAbsolutePath().toString());
+                EstimResult res = new EstimResult(randomAngle, est.estimateSkew(edited), entry.toAbsolutePath().toString());
                 resutlts.add(res);
 
                 System.out.println("Uhel: " + res.skewValue + "; Odhad: " + res.skewEstimate);
