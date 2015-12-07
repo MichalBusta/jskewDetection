@@ -22,9 +22,9 @@ import org.opencv.imgproc.Imgproc;
  */
 public class TestVerticalDominant {
 
-    class EstimRestult {
+    class EstimateResult {
 
-        public EstimRestult(double skewValue, double skewEstimate, String name) {
+        public EstimateResult(double skewValue, double skewEstimate, String name) {
             this.skewValue = skewValue;
             this.skewEstimate = skewEstimate;
             this.name = name;
@@ -36,7 +36,7 @@ public class TestVerticalDominant {
     }
 
 
-    List<EstimRestult> resutlts = new LinkedList<EstimRestult>();
+    List<EstimateResult> resutlts = new LinkedList<EstimateResult>();
     int[] difference; // (skewValue-SkewEstimate)
     String[] paths; // paths to the test images
     int totalImageNumber;
@@ -44,53 +44,13 @@ public class TestVerticalDominant {
     double SuccessRate; // correctEstimations percentage
     double stDev; // the standard deviation of the estimations
 
-
-    // gets the path to every png image of the given directory
-    public String[] getFileNames(String directory) {
-        String[] fileNames;
-        File f;
-        int NumberOfFiles = 0;
-
-        try {
-            // create new file
-            f = new File(directory);
-
-            // array of files, add checking for directories etc.!
-            paths = f.list();
-
-            // for each name in the path array
-            for (String path : paths) {
-                // get the number of png files so that we can create the array of paths
-                if (path.endsWith(".png")) {
-                    NumberOfFiles++;
-                }
-
-            }
-            // save the path names into the array
-            fileNames = new String[NumberOfFiles];
-            int a = 0;
-            for (String path : paths) {
-                if (path.endsWith(".png")) {
-                    fileNames[a] = path;
-                    a++;
-                }
-
-            }
-            return fileNames;
-        } catch (Exception e) {
-            // if any error occurs
-            e.printStackTrace();
-        }
-        fileNames = new String[0];
-        return fileNames;
-    }
     
     // test the estimator using random skew values
     public void testImages(String[] paths) {
         correctEstimations = 0;
         SkewEstimator est = new VerticalDominant();
 
-        Path dir = Paths.get("src/main/resources/google4");
+        Path dir = Paths.get("C:\\Windows\\Temp\\google4");
         int a = 0;
         Random random = new Random();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{png}")) {
@@ -99,34 +59,37 @@ public class TestVerticalDominant {
         		// read the image
         		System.out.println(entry.toAbsolutePath());
         		Mat img = Highgui.imread(entry.toAbsolutePath().toString(), Highgui.IMREAD_GRAYSCALE);
-                if (img.cols() == 0)
-                    continue; //TODO !! fix this
+                if (img.cols() == 0) {
+                    System.out.println("Chyba");
+                    continue; //TODO !! fix this//
+                }
+
+
                 Imgproc.copyMakeBorder(img, img, 0, 0, img.rows(), img.rows(), Imgproc.BORDER_CONSTANT, new Scalar(255, 255, 255));
-        		//get random angle
-        		int randomAngle = random.nextInt(20);
+                //get random angle
+                int randomAngle = random.nextInt(20);
 
         		// skew the image
         		Mat edited = new Mat();
         		SkewEstimator.skewImageWBG(img, edited, Math.toRadians(randomAngle));
-                EstimRestult res = new EstimRestult(randomAngle, est.estimateSkew(edited), entry.toAbsolutePath().toString());
-                resutlts.add(res);
+                EstimateResult res = new EstimateResult(randomAngle, est.estimateSkew(edited), entry.toAbsolutePath().toString());
+                this.resutlts.add(res);
 
                 System.out.println("Uhel: " + res.skewValue + "; Odhad: " + res.skewEstimate);
 
                 if (Math.abs((res.skewEstimate + res.skewValue)) < 4) {
                     this.correctEstimations++;
-        		}
-        		else {
-        			OCVUtils.showImage(img);
-        			OCVUtils.showImage(edited);
-        			Mat narrowed = new Mat();
+                } else {
+                    // OCVUtils.showImage(img);
+                    // OCVUtils.showImage(edited);
+                    Mat narrowed = new Mat();
                     SkewEstimator.skewImage(edited, narrowed, Math.toRadians(res.skewEstimate));
-                    OCVUtils.showImage(narrowed);
-        		}
-        		System.out.println(String.format("Recall: {%f}", this.correctEstimations / new Float(a)));
-        		a++;
-        		
-        	}
+                    // OCVUtils.showImage(narrowed);
+                }
+                System.out.println(String.format("Recall: {%f}", this.correctEstimations / new Float(a + 1)));
+                a++;
+
+            }
         } catch (DirectoryIteratorException e) {
             // I/O error encounted during the iteration, the cause is an IOException
             throw new RuntimeException(e);
@@ -140,20 +103,25 @@ public class TestVerticalDominant {
         double mean;
 
         double sum = 0;
-        for (int a = 0; a < skewEstimate.length; a++) {
-            sum = sum + Math.abs(skewEstimate[a] - skewValue[a]);
+        for (int a = 0; a < this.resutlts.size(); a++) {
+            sum = sum + Math.abs(((this.resutlts.get(a).skewEstimate - (-this.resutlts.get(a).skewValue))));
         }
-        mean = sum / skewEstimate.length;
-        for (int a = 0; a < skewEstimate.length; a++) {
-            dispersion = dispersion + (((skewEstimate[a] - skewValue[a]) - mean) * ((skewEstimate[a] - skewValue[a]) - mean));
+        System.out.println("Soucet: " + sum);
+        mean = (sum / this.resutlts.size());
+        System.out.println("Prumer: " + mean);
+        for (int a = 0; a < this.resutlts.size(); a++) {
+            dispersion = dispersion + (((this.resutlts.get(a).skewEstimate - this.resutlts.get(a).skewValue) - mean) * ((this.resutlts.get(a).skewEstimate - this.resutlts.get(a).skewValue) - mean));
         }
-        return Math.sqrt(dispersion) / skewValue.length;
+        dispersion = dispersion / this.resutlts.size();
+        System.out.println("Rozptyl: " + dispersion);
+        System.out.println("Pocet: " + this.resutlts.size());
+        return Math.sqrt(dispersion);
     }
 
     public static void main(String[] args) {
         TestVerticalDominant tvd = new TestVerticalDominant();
-        tvd.paths = tvd.getFileNames("src/main/resources/google4");
         tvd.testImages(tvd.paths);
+        System.out.println("Směrodatná odchylka: " + tvd.calculateStandardDeviation());
     }
 }
 
