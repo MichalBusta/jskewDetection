@@ -1,6 +1,5 @@
 package cz.cvut.cmp.skew;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryIteratorException;
 import java.nio.file.DirectoryStream;
@@ -36,17 +35,13 @@ public class TestVerticalDominant {
     }
 
 
-    List<EstimateResult> resutlts = new LinkedList<EstimateResult>();
-    int[] difference; // (skewValue-SkewEstimate)
-    String[] paths; // paths to the test images
-    int totalImageNumber;
+    List<EstimateResult> results = new LinkedList<EstimateResult>();
     int correctEstimations;
-    double SuccessRate; // correctEstimations percentage
     double stDev; // the standard deviation of the estimations
 
-    
+
     // test the estimator using random skew values
-    public void testImages(String[] paths) {
+    public void testImages() {
         correctEstimations = 0;
         SkewEstimator est = new VerticalDominant();
 
@@ -54,11 +49,11 @@ public class TestVerticalDominant {
         int a = 0;
         Random random = new Random();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{png}")) {
-        	for (Path entry: stream) {
-        		
-        		// read the image
-        		System.out.println(entry.toAbsolutePath());
-        		Mat img = Highgui.imread(entry.toAbsolutePath().toString(), Highgui.IMREAD_GRAYSCALE);
+            for (Path entry : stream) {
+
+                // read the image
+                System.out.println(entry.toAbsolutePath());
+                Mat img = Highgui.imread(entry.toAbsolutePath().toString(), Highgui.IMREAD_GRAYSCALE);
                 if (img.cols() == 0) {
                     System.out.println("Chyba");
                     continue; //TODO !! fix this//
@@ -69,14 +64,17 @@ public class TestVerticalDominant {
                 //get random angle
                 int randomAngle = random.nextInt(20);
 
-        		// skew the image
-        		Mat edited = new Mat();
-        		SkewEstimator.skewImageWBG(img, edited, Math.toRadians(randomAngle));
+                // skew the image
+                Mat edited = new Mat();
+                SkewEstimator.skewImageWBG(img, edited, Math.toRadians(randomAngle));
+
+                // put the estimation results into the results list
                 EstimateResult res = new EstimateResult(randomAngle, est.estimateSkew(edited), entry.toAbsolutePath().toString());
-                this.resutlts.add(res);
+                this.results.add(res);
 
-                System.out.println("Uhel: " + res.skewValue + "; Odhad: " + res.skewEstimate);
+                System.out.println("Angle: " + res.skewValue + "; Estimated angle: " + res.skewEstimate);
 
+                // the estimate is considered as correct if it doesnt diffe more than 3 degrees
                 if (Math.abs((res.skewEstimate + res.skewValue)) < 4) {
                     this.correctEstimations++;
                 } else {
@@ -94,34 +92,45 @@ public class TestVerticalDominant {
             // I/O error encounted during the iteration, the cause is an IOException
             throw new RuntimeException(e);
         } catch (IOException e1) {
-        	throw new RuntimeException(e1);
-		}
+            throw new RuntimeException(e1);
+        }
     }
 
     public double calculateStandardDeviation() {
+        if (this.results.size() < 1)
+            return Double.parseDouble(null);
         double dispersion = 0;
         double mean;
 
         double sum = 0;
-        for (int a = 0; a < this.resutlts.size(); a++) {
-            sum = sum + Math.abs(((this.resutlts.get(a).skewEstimate - (-this.resutlts.get(a).skewValue))));
+        // calculate the sum of the deviations
+        for (int a = 0; a < this.results.size(); a++) {
+            sum = sum + Math.abs(((this.results.get(a).skewEstimate + (this.results.get(a).skewValue))));
         }
+
+        //calculate the dispersion
+        mean = (sum / this.results.size());
+        for (int a = 0; a < this.results.size(); a++) {
+            dispersion = dispersion + (((this.results.get(a).skewEstimate + (this.results.get(a).skewValue)) - mean) * ((this.results.get(a).skewEstimate + (this.results.get(a).skewValue)) - mean));
+        }
+        dispersion = dispersion / this.results.size();
+
+        // calculate the st. deviation
+        this.stDev = Math.sqrt(dispersion);
+
+        // Check the results
         System.out.println("Soucet: " + sum);
-        mean = (sum / this.resutlts.size());
+        System.out.println("Pocet: " + this.results.size());
         System.out.println("Prumer: " + mean);
-        for (int a = 0; a < this.resutlts.size(); a++) {
-            dispersion = dispersion + (((this.resutlts.get(a).skewEstimate - this.resutlts.get(a).skewValue) - mean) * ((this.resutlts.get(a).skewEstimate - this.resutlts.get(a).skewValue) - mean));
-        }
-        dispersion = dispersion / this.resutlts.size();
         System.out.println("Rozptyl: " + dispersion);
-        System.out.println("Pocet: " + this.resutlts.size());
-        return Math.sqrt(dispersion);
+        System.out.println("Směrodatná odchylka: " + this.stDev);
+        return this.stDev;
     }
 
     public static void main(String[] args) {
         TestVerticalDominant tvd = new TestVerticalDominant();
-        tvd.testImages(tvd.paths);
-        System.out.println("Směrodatná odchylka: " + tvd.calculateStandardDeviation());
+        tvd.testImages();
+        tvd.calculateStandardDeviation();
     }
 }
 
