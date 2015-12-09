@@ -36,7 +36,7 @@ public class TestVerticalDominant {
     }
 
 
-    List<EstimResult> resutlts = new LinkedList<EstimResult>();
+    List<EstimResult> results = new LinkedList<EstimResult>();
     int[] difference; // (skewValue-SkewEstimate)
     String[] paths; // paths to the test images
     int totalImageNumber;
@@ -89,8 +89,8 @@ public class TestVerticalDominant {
     public void testImages(String[] paths) {
         correctEstimations = 0;
         SkewEstimator est = new VerticalDominant();
-        
-        Path dir  = Paths.get("/textspotter/SkewDetection/google4");
+
+        Path dir = Paths.get("src/main/resources/google4");
         int a = 0;
         Random random = new Random();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{png}")) {
@@ -109,7 +109,7 @@ public class TestVerticalDominant {
         		Mat edited = new Mat();
         		SkewEstimator.skewImageWBG(img, edited, Math.toRadians(randomAngle));
                 EstimResult res = new EstimResult(randomAngle, est.estimateSkew(edited), entry.toAbsolutePath().toString());
-                resutlts.add(res);
+                results.add(res);
 
                 System.out.println("Uhel: " + res.skewValue + "; Odhad: " + res.skewEstimate);
 
@@ -135,13 +135,24 @@ public class TestVerticalDominant {
 		}
     }
 
-    public void calculateStandardDeviation() {
-    	
+    public double calculateStandardDeviation() {
+        double dispersion = 0;
+        double mean;
+
+        double sum = 0;
+        for (int a = 0; a < results.size(); a++) {
+            sum += Math.abs(results.get(a).skewEstimate - results.get(a).skewValue);
+        }
+        mean = sum / results.size();
+        for (int a = 0; a < results.size(); a++) {
+            dispersion += (((results.get(a).skewEstimate - results.get(a).skewValue) - mean) * ((results.get(a).skewEstimate - results.get(a).skewValue) - mean));
+        }
+        return Math.sqrt(dispersion) / results.size();
     }
 
     public static void main(String[] args) {
         TestVerticalDominant tvd = new TestVerticalDominant();
-        tvd.paths = tvd.getFileNames("/textspotter/SkewDetection/google4");
+        tvd.paths = tvd.getFileNames("src/main/resources/google4");
         tvd.testImages(tvd.paths);
     }
 }
