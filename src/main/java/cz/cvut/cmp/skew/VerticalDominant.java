@@ -62,7 +62,7 @@ public class VerticalDominant extends SkewEstimator {
         result[1] = angle;
 
         // try all angles in the range of +-45d from the initial one, compare the entropy
-        for (int a = 1; a < 45; a++) {
+        for (double a = 0; a < 45; a += 0.5) {
             Mat edited = new Mat();
             //try the positive angle
             skewImage(invImg, edited, Math.toRadians(a));

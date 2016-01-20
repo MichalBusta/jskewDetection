@@ -1,6 +1,5 @@
 package cz.cvut.cmp.skew;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryIteratorException;
 import java.nio.file.DirectoryStream;
@@ -22,9 +21,9 @@ import org.opencv.imgproc.Imgproc;
  */
 public class TestVerticalDominant {
 
-    class EstimResult {
+    class EstimateResult {
 
-        public EstimResult(double skewValue, double skewEstimate, String name) {
+        public EstimateResult(double skewValue, double skewEstimate, String name) {
             this.skewValue = skewValue;
             this.skewEstimate = skewEstimate;
             this.name = name;
@@ -36,124 +35,103 @@ public class TestVerticalDominant {
     }
 
 
-    List<EstimResult> results = new LinkedList<EstimResult>();
-    int[] difference; // (skewValue-SkewEstimate)
-    String[] paths; // paths to the test images
-    int totalImageNumber;
+    List<EstimateResult> results = new LinkedList<EstimateResult>();
     int correctEstimations;
-    double SuccessRate; // correctEstimations percentage
     double stDev; // the standard deviation of the estimations
 
 
-    // gets the path to every png image of the given directory
-    public String[] getFileNames(String directory) {
-        String[] fileNames;
-        File f;
-        int NumberOfFiles = 0;
-
-        try {
-            // create new file
-            f = new File(directory);
-
-            // array of files, add checking for directories etc.!
-            paths = f.list();
-
-            // for each name in the path array
-            for (String path : paths) {
-                // get the number of png files so that we can create the array of paths
-                if (path.endsWith(".png")) {
-                    NumberOfFiles++;
-                }
-
-            }
-            // save the path names into the array
-            fileNames = new String[NumberOfFiles];
-            int a = 0;
-            for (String path : paths) {
-                if (path.endsWith(".png")) {
-                    fileNames[a] = path;
-                    a++;
-                }
-
-            }
-            return fileNames;
-        } catch (Exception e) {
-            // if any error occurs
-            e.printStackTrace();
-        }
-        fileNames = new String[0];
-        return fileNames;
-    }
-    
     // test the estimator using random skew values
-    public void testImages(String[] paths) {
+    public void testImages() {
         correctEstimations = 0;
         SkewEstimator est = new VerticalDominant();
 
-        Path dir = Paths.get("src/main/resources/google4");
+        //Path dir = Paths.get("C:\\Windows\\Temp\\google4");
+        Path dir = Paths.get("/textspotter/SkewDetection/google4");
         int a = 0;
         Random random = new Random();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{png}")) {
-        	for (Path entry: stream) {
-        		
-        		// read the image
-        		System.out.println(entry.toAbsolutePath());
-        		Mat img = Highgui.imread(entry.toAbsolutePath().toString(), Highgui.IMREAD_GRAYSCALE);
-                if (img.cols() == 0)
-                    continue; //TODO !! fix this
+            for (Path entry : stream) {
+
+                // read the image
+                System.out.println(entry.toAbsolutePath());
+                Mat img = Highgui.imread(entry.toAbsolutePath().toString(), Highgui.IMREAD_GRAYSCALE);
+                if (img.cols() == 0) {
+                    System.out.println("Chyba");
+                    continue; //TODO !! fix this//
+                }
+
+
                 Imgproc.copyMakeBorder(img, img, 0, 0, img.rows(), img.rows(), Imgproc.BORDER_CONSTANT, new Scalar(255, 255, 255));
-        		//get random angle
-        		int randomAngle = random.nextInt(20);
+                //get random angle
+                int randomAngle = random.nextInt(20);
 
-        		// skew the image
-        		Mat edited = new Mat();
-        		SkewEstimator.skewImageWBG(img, edited, Math.toRadians(randomAngle));
-                EstimResult res = new EstimResult(randomAngle, est.estimateSkew(edited), entry.toAbsolutePath().toString());
-                results.add(res);
+                // skew the image
+                Mat edited = new Mat();
+                SkewEstimator.skewImageWBG(img, edited, Math.toRadians(randomAngle));
 
-                System.out.println("Uhel: " + res.skewValue + "; Odhad: " + res.skewEstimate);
+                // put the estimation results into the results list
+                EstimateResult res = new EstimateResult(randomAngle, est.estimateSkew(edited), entry.toAbsolutePath().toString());
+                this.results.add(res);
 
+                System.out.println("Angle: " + res.skewValue + "; Estimated angle: " + res.skewEstimate);
+
+                // the estimate is considered as correct if it doesnt diffe more than 3 degrees
                 if (Math.abs((res.skewEstimate + res.skewValue)) < 4) {
                     this.correctEstimations++;
-        		}
-        		else {
-        			OCVUtils.showImage(img);
-        			OCVUtils.showImage(edited);
-        			Mat narrowed = new Mat();
+                } else {
+                    // OCVUtils.showImage(img);
+                    // OCVUtils.showImage(edited);
+                    Mat narrowed = new Mat();
                     SkewEstimator.skewImage(edited, narrowed, Math.toRadians(res.skewEstimate));
-                    OCVUtils.showImage(narrowed);
-        		}
-        		System.out.println(String.format("Recall: {%f}", this.correctEstimations / new Float(a)));
-        		a++;
-        		
-        	}
+                    // OCVUtils.showImage(narrowed);
+                }
+                System.out.println(String.format("Recall: {%f}", this.correctEstimations / new Float(a + 1)));
+                a++;
+
+            }
         } catch (DirectoryIteratorException e) {
             // I/O error encounted during the iteration, the cause is an IOException
             throw new RuntimeException(e);
         } catch (IOException e1) {
-        	throw new RuntimeException(e1);
-		}
+            throw new RuntimeException(e1);
+        }
     }
 
     public double calculateStandardDeviation() {
+        if (this.results.size() < 1)
+            return Double.parseDouble(null);
         double dispersion = 0;
         double mean;
 
         double sum = 0;
-        for (int a = 0; a < results.size(); a++) {
-            sum += Math.abs(results.get(a).skewEstimate - results.get(a).skewValue);
+        // calculate the sum of the deviations
+        for (int a = 0; a < this.results.size(); a++) {
+            sum = sum + Math.abs(((this.results.get(a).skewEstimate + (this.results.get(a).skewValue))));
         }
-        mean = sum / results.size();
-        for (int a = 0; a < results.size(); a++) {
-            dispersion += (((results.get(a).skewEstimate - results.get(a).skewValue) - mean) * ((results.get(a).skewEstimate - results.get(a).skewValue) - mean));
+
+        //calculate the dispersion
+        mean = (sum / this.results.size());
+        for (int a = 0; a < this.results.size(); a++) {
+            dispersion = dispersion + (((this.results.get(a).skewEstimate + (this.results.get(a).skewValue)) - mean) * ((this.results.get(a).skewEstimate + (this.results.get(a).skewValue)) - mean));
         }
-        return Math.sqrt(dispersion) / results.size();
+        dispersion = dispersion / this.results.size();
+
+        // calculate the st. deviation
+        this.stDev = Math.sqrt(dispersion);
+
+        // Check the results
+        System.out.println("Soucet: " + sum);
+        System.out.println("Pocet: " + this.results.size());
+        System.out.println("Prumer: " + mean);
+        System.out.println("Rozptyl: " + dispersion);
+        System.out.println("Směrodatná odchylka: " + this.stDev);
+        return this.stDev;
     }
 
     public static void main(String[] args) {
         TestVerticalDominant tvd = new TestVerticalDominant();
-        tvd.paths = tvd.getFileNames("src/main/resources/google4");
-        tvd.testImages(tvd.paths);
+        tvd.testImages();
+        tvd.calculateStandardDeviation();
     }
 }
 
