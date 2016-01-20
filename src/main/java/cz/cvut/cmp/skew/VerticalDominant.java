@@ -88,16 +88,72 @@ public class VerticalDominant extends SkewEstimator {
         return result[1];
     }
 
+    public static double estimateSkewBisect(Mat img) {
+        // invert the colours
+        Mat invImg = new Mat();
+        bitwise_not(img, invImg);
+        //we will extend image with border on left and right side of the image, because of the image
+        Imgproc.copyMakeBorder(invImg, invImg, 0, 0, invImg.rows(), invImg.rows(), Imgproc.BORDER_CONSTANT);
+
+
+        // set a, b as the entropy of the limit angles
+        Mat edited = new Mat();
+        Mat rowSumImg = new Mat();
+        double i = 45; // begining of the interval
+        double f = -45; // end of the interval
+        double m; // midpoint of i and f
+        double iValue, fValue, mValue; // entropy values for the limits and the midpoint
+
+        skewImage(invImg, edited, Math.toRadians(Math.toRadians(i)));
+        Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
+        iValue = calculateEntropy(rowSumImg);
+        skewImage(invImg, edited, Math.toRadians(Math.toRadians(f)));
+        Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
+        fValue = calculateEntropy(rowSumImg);
+
+        // apply the bisection method
+        while (true) {
+            m = (i + f) / 2;
+            System.out.println("i:" + i + " f:" + f + " m:" + m);
+            skewImage(invImg, edited, Math.toRadians(m));
+            Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
+            mValue = calculateEntropy(rowSumImg);
+
+            if (Math.abs(iValue - mValue) < 0.001 || Math.abs(fValue - mValue) < 0.001) {
+                System.out.println("iV-mV: " + (iValue - mValue));
+                System.out.println("fV-mV: " + (fValue - mValue));
+                System.out.println("mE:" + mValue + " iE:" + iValue + " fE:" + fValue);
+                return m;
+            }
+
+            if (iValue - mValue > fValue - mValue) {
+                i = m;
+                iValue = mValue;
+            } else {
+                f = m;
+                fValue = mValue;
+            }
+
+
+        }
+    }
+
     public static void main(String[] args) {
 
         // read image
         Mat img = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png", Highgui.IMREAD_GRAYSCALE);
+        Mat img2 = Highgui.imread("C:\\Windows\\Temp\\google4\\Arial-Regular-sell.bin.png", Highgui.IMREAD_GRAYSCALE);
+        Mat skew = new Mat();
+        skewImage(img2, skew, Math.toRadians(9));
 
         // estimate skew
         SkewEstimator est = new VerticalDominant();
-        double skewAngle = est.estimateSkew(img);
+        double skewAngle = est.estimateSkew(skew);
+        double estimated = estimateSkewBisect(skew);
 
-        System.out.println(skewAngle);
+        System.out.println("Odhad 1: " + skewAngle);
+        System.out.println("Odhad 2: " + estimated);
+
 
 
     }
