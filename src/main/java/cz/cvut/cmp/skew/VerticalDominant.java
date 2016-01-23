@@ -88,71 +88,67 @@ public class VerticalDominant extends SkewEstimator {
         return result[1];
     }
 
-    public static double estimateSkewBisect(Mat img) {
+    public static double estimateSkewBisect(Mat img, double a, double b, int nMax) {
         // invert the colours
         Mat invImg = new Mat();
         bitwise_not(img, invImg);
-        //we will extend image with border on left and right side of the image, because of the image
+        //extend image with border on left and right side
         Imgproc.copyMakeBorder(invImg, invImg, 0, 0, invImg.rows(), invImg.rows(), Imgproc.BORDER_CONSTANT);
 
 
-        // set a, b as the entropy of the limit angles
+        // set the inital values
         Mat edited = new Mat();
         Mat rowSumImg = new Mat();
-        double i = 45; // begining of the interval
-        double f = -45; // end of the interval
-        double m; // midpoint of i and f
-        double iValue, fValue, mValue; // entropy values for the limits and the midpoint
+        double m = 0; // midpoint of i and f
+        double aEntropyValue, bEntropyValue, Entropy; // entropy values for the limits and the midpoint
 
-        skewImage(invImg, edited, Math.toRadians(Math.toRadians(i)));
+        skewImage(invImg, edited, Math.toRadians(Math.toRadians(a)));
         Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
-        iValue = calculateEntropy(rowSumImg);
-        skewImage(invImg, edited, Math.toRadians(Math.toRadians(f)));
+        aEntropyValue = calculateEntropy(rowSumImg);
+        skewImage(invImg, edited, Math.toRadians(Math.toRadians(b)));
         Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
-        fValue = calculateEntropy(rowSumImg);
+        bEntropyValue = calculateEntropy(rowSumImg);
 
         // apply the bisection method
-        while (true) {
-            m = (i + f) / 2;
-            System.out.println("i:" + i + " f:" + f + " m:" + m);
+        for (int i = 0; i < nMax; i++) {
+            m = (a + b) / 2;
             skewImage(invImg, edited, Math.toRadians(m));
             Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
-            mValue = calculateEntropy(rowSumImg);
+            Entropy = calculateEntropy(rowSumImg);
 
-            if (Math.abs(iValue - mValue) < 0.001 || Math.abs(fValue - mValue) < 0.001) {
-                System.out.println("iV-mV: " + (iValue - mValue));
-                System.out.println("fV-mV: " + (fValue - mValue));
-                System.out.println("mE:" + mValue + " iE:" + iValue + " fE:" + fValue);
+            if (Math.abs(aEntropyValue - Entropy) < 0.0001 || Math.abs(bEntropyValue - Entropy) < 0.0001) {
+                System.out.println("mE:" + Entropy + " aE:" + aEntropyValue + " bE:" + bEntropyValue);
                 return m;
             }
 
-            if (iValue - mValue > fValue - mValue) {
-                i = m;
-                iValue = mValue;
+            if (aEntropyValue - Entropy > bEntropyValue - Entropy) {
+                a = m;
+                aEntropyValue = Entropy;
             } else {
-                f = m;
-                fValue = mValue;
+                b = m;
+                bEntropyValue = Entropy;
             }
 
 
         }
+        return m;
     }
 
     public static void main(String[] args) {
 
         // read image
         Mat img = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png", Highgui.IMREAD_GRAYSCALE);
-        Mat img2 = Highgui.imread("C:\\Windows\\Temp\\google4\\Arial-Regular-sell.bin.png", Highgui.IMREAD_GRAYSCALE);
+        Mat img2 = Highgui.imread("C:\\Windows\\Temp\\google4\\Arial-Regular-device.bin.png", Highgui.IMREAD_GRAYSCALE);
         Mat skew = new Mat();
-        skewImage(img2, skew, Math.toRadians(9));
+        skewImageWBG(img2, skew, Math.toRadians(-11));
 
         // estimate skew
         SkewEstimator est = new VerticalDominant();
-        double skewAngle = est.estimateSkew(skew);
-        double estimated = estimateSkewBisect(skew);
+        double estimated1 = est.estimateSkew(skew);
+        double estimated2 = estimateSkewBisect(skew, -35, 35, 30);
 
-        System.out.println("Odhad 1: " + skewAngle);
-        System.out.println("Odhad 2: " + estimated);
+        System.out.println("Odhad 1: " + estimated1);
+        System.out.println("Odhad 2 (bisection): " + estimated2);
 
 
 
