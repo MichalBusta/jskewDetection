@@ -1,21 +1,27 @@
 package cz.cvut.cmp.skew;
 
-import org.opencv.core.*;
-import org.opencv.highgui.Highgui;
+import static org.opencv.core.Core.bitwise_not;
+
+import org.apache.commons.math3.analysis.UnivariateFunction;
+import org.apache.commons.math3.analysis.function.Sin;
+import org.apache.commons.math3.optim.MaxEval;
+import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
+import org.apache.commons.math3.optim.univariate.BrentOptimizer;
+import org.apache.commons.math3.optim.univariate.SearchInterval;
+import org.apache.commons.math3.optim.univariate.UnivariateObjectiveFunction;
+import org.opencv.core.Core;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
-import java.awt.*;
-
-import static org.opencv.core.Core.bitwise_not;
-import static org.opencv.core.Core.reduce;
 
 /**
  * Created by J����� on 10. 11. 2015.
  */
 public class VerticalDominant extends SkewEstimator {
 
+	
     static {
         nu.pattern.OpenCV.loadShared();
     }
@@ -94,6 +100,8 @@ public class VerticalDominant extends SkewEstimator {
         bitwise_not(img, invImg);
         //we will extend image with border on left and right side of the image, because of the image
         Imgproc.copyMakeBorder(invImg, invImg, 0, 0, invImg.rows(), invImg.rows(), Imgproc.BORDER_CONSTANT);
+        
+        OCVUtils.showImage(invImg);
 
 
         // set a, b as the entropy of the limit angles
@@ -112,17 +120,19 @@ public class VerticalDominant extends SkewEstimator {
         fValue = calculateEntropy(rowSumImg);
 
         // apply the bisection method
+        int itCount = 2;
         while (true) {
             m = (i + f) / 2;
             System.out.println("i:" + i + " f:" + f + " m:" + m);
             skewImage(invImg, edited, Math.toRadians(m));
+            //OCVUtils.showImage(edited);
             Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
             mValue = calculateEntropy(rowSumImg);
-
+            itCount++;
             if (Math.abs(iValue - mValue) < 0.001 || Math.abs(fValue - mValue) < 0.001) {
                 System.out.println("iV-mV: " + (iValue - mValue));
                 System.out.println("fV-mV: " + (fValue - mValue));
-                System.out.println("mE:" + mValue + " iE:" + iValue + " fE:" + fValue);
+                System.out.println("mE:" + mValue + " iE:" + iValue + " fE:" + fValue + " iter: " + itCount);
                 return m;
             }
 
@@ -133,28 +143,43 @@ public class VerticalDominant extends SkewEstimator {
                 f = m;
                 fValue = mValue;
             }
-
-
         }
     }
 
     public static void main(String[] args) {
 
         // read image
-        Mat img = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png", Highgui.IMREAD_GRAYSCALE);
-        Mat img2 = Highgui.imread("C:\\Windows\\Temp\\google4\\Arial-Regular-sell.bin.png", Highgui.IMREAD_GRAYSCALE);
+        Mat img2 = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png", Highgui.IMREAD_GRAYSCALE);
+        //Mat img2 = Highgui.imread("C:\\Windows\\Temp\\google4\\Arial-Regular-sell.bin.png", Highgui.IMREAD_GRAYSCALE);
         Mat skew = new Mat();
-        skewImage(img2, skew, Math.toRadians(9));
-
+        skewImageWBG(img2, skew, Math.toRadians(-12));
+        OCVUtils.showImage(skew);
         // estimate skew
         SkewEstimator est = new VerticalDominant();
         double skewAngle = est.estimateSkew(skew);
+        
         double estimated = estimateSkewBisect(skew);
+        
+        //brent optimizer 
+        BrentOptimizer minimizer = new BrentOptimizer(1e-2, 1e-3);
+        UnivariateFunction f = new UnivariateVD(skew);
+        double val = minimizer.optimize(new MaxEval(200),
+                new UnivariateObjectiveFunction(f),
+                GoalType.MINIMIZE, new SearchInterval(-45, 45)).getPoint();
+        int iter3 = minimizer.getIterations();
+        
+        Mat skew2 = new Mat();
+        skewImageWBG(skew, skew2, Math.toRadians(skewAngle));
+        OCVUtils.showImage(skew2);
+        skewImageWBG(skew, skew2, Math.toRadians(estimated));
+        OCVUtils.showImage(skew2);
+        skewImageWBG(skew, skew2, Math.toRadians(val));
+        OCVUtils.showImage(skew2);
+        
 
         System.out.println("Odhad 1: " + skewAngle);
         System.out.println("Odhad 2: " + estimated);
-
-
+        System.out.println("Odhad 3: " + val + " in " + iter3);
 
     }
 }
