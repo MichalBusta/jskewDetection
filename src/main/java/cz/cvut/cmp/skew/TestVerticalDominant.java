@@ -45,8 +45,7 @@ public class TestVerticalDominant {
         correctEstimations = 0;
         SkewEstimator est = new VerticalDominant();
 
-        //Path dir = Paths.get("C:\\Windows\\Temp\\google4");
-        Path dir = Paths.get("/textspotter/SkewDetection/google4");
+        Path dir = Paths.get("C:\\Windows\\Temp\\google4");
         int a = 0;
         Random random = new Random();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.{png}")) {

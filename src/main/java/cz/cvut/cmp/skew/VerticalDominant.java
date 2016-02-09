@@ -21,7 +21,7 @@ import org.opencv.imgproc.Imgproc;
  */
 public class VerticalDominant extends SkewEstimator {
 
-	
+
     static {
         nu.pattern.OpenCV.loadShared();
     }
@@ -100,7 +100,7 @@ public class VerticalDominant extends SkewEstimator {
         bitwise_not(img, invImg);
         //extend image with border on left and right side
         Imgproc.copyMakeBorder(invImg, invImg, 0, 0, invImg.rows(), invImg.rows(), Imgproc.BORDER_CONSTANT);
-        
+
         OCVUtils.showImage(invImg);
 
 
@@ -154,26 +154,29 @@ public class VerticalDominant extends SkewEstimator {
         // estimate skew
         SkewEstimator est = new VerticalDominant();
         double skewAngle = est.estimateSkew(skew);
-        
-        //brent optimizer 
+
+        //brent optimizer
         BrentOptimizer minimizer = new BrentOptimizer(1e-2, 1e-3);
         UnivariateFunction f = new UnivariateVD(skew);
         double val = minimizer.optimize(new MaxEval(200),
                 new UnivariateObjectiveFunction(f),
                 GoalType.MINIMIZE, new SearchInterval(-45, 45)).getPoint();
         int iter3 = minimizer.getIterations();
-        
+
         Mat skew2 = new Mat();
         skewImageWBG(skew, skew2, Math.toRadians(skewAngle));
         OCVUtils.showImage(skew2);
-        
+
         double estimated1 = est.estimateSkew(skew);
         double estimated2 = estimateSkewBisect(skew, -35, 35, 30);
-      
-        
+
+
         System.out.println("Odhad 1: " + estimated1);
         System.out.println("Odhad 2 (bisection): " + estimated2);
         System.out.println("Odhad 3: " + val + " in " + iter3);
 
     }
 }
+
+
+
