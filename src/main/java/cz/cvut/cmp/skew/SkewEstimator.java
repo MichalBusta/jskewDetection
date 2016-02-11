@@ -10,6 +10,9 @@ public abstract class SkewEstimator {
 
     abstract double estimateSkew(Mat img);
 
+    abstract double estimateSkew(Mat skew, double i, double f, int max);
+
+    abstract int[] getIterations();
 
     /**
      * Image de-skew

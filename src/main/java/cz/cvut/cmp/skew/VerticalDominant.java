@@ -20,11 +20,14 @@ import org.opencv.imgproc.Imgproc;
  * Created by J����� on 10. 11. 2015.
  */
 public class VerticalDominant extends SkewEstimator {
+    int it1;
+    int it2;
 
 
     static {
         nu.pattern.OpenCV.loadShared();
     }
+
 
     public static double calculateEntropy(Mat hist) {
         double entropie = 0;
@@ -91,17 +94,20 @@ public class VerticalDominant extends SkewEstimator {
                 result[1] = -a;
             }
         }
+        it1 = (int) (45 / 0.5);
         return result[1];
     }
 
-    public static double estimateSkewBisect(Mat img, double a, double b, int nMax) {
+
+    // using bisection method
+    public double estimateSkew(Mat img, double a, double b, int nMax) {
         // invert the colours
         Mat invImg = new Mat();
         bitwise_not(img, invImg);
         //extend image with border on left and right side
         Imgproc.copyMakeBorder(invImg, invImg, 0, 0, invImg.rows(), invImg.rows(), Imgproc.BORDER_CONSTANT);
 
-        OCVUtils.showImage(invImg);
+        // OCVUtils.showImage(invImg);
 
 
         // set the inital values
@@ -126,7 +132,6 @@ public class VerticalDominant extends SkewEstimator {
             Entropy = calculateEntropy(rowSumImg);
 
             if (Math.abs(aEntropyValue - Entropy) < 0.0001 || Math.abs(bEntropyValue - Entropy) < 0.0001) {
-                System.out.println("mE:" + Entropy + " aE:" + aEntropyValue + " bE:" + bEntropyValue);
                 return m;
             }
 
@@ -137,8 +142,16 @@ public class VerticalDominant extends SkewEstimator {
                 b = m;
                 bEntropyValue = Entropy;
             }
+            it2 = i + 1;
         }
         return m;
+    }
+
+    int[] getIterations() {
+        int[] iterations = new int[2];
+        iterations[0] = it1;
+        iterations[1] = it2;
+        return iterations;
     }
 
     public static void main(String[] args) {
@@ -168,7 +181,7 @@ public class VerticalDominant extends SkewEstimator {
         OCVUtils.showImage(skew2);
 
         double estimated1 = est.estimateSkew(skew);
-        double estimated2 = estimateSkewBisect(skew, -35, 35, 30);
+        double estimated2 = est.estimateSkew(skew, -35, 35, 30);
 
 
         System.out.println("Odhad 1: " + estimated1);

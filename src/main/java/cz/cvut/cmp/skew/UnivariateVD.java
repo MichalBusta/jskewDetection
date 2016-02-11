@@ -31,13 +31,13 @@ public class UnivariateVD implements UnivariateFunction {
 
         Mat edited = new Mat();
         SkewEstimator.skewImage(invImg, edited, Math.toRadians(x));
-        OCVUtils.showImage(edited);
+        //  OCVUtils.showImage(edited);
         // get the histogram matrix
         Mat rowSumImg = new Mat();
         Core.reduce(edited, rowSumImg, 0, Core.REDUCE_SUM, CvType.CV_32FC1);
         // find the skew
         double entropy = VerticalDominant.calculateEntropy(rowSumImg);
-        System.out.println("x " + x + " Entropy: " + entropy);
+        // System.out.println("x " + x + " Entropy: " + entropy);
         return entropy;
     }
 
