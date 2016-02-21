@@ -2,6 +2,7 @@ package cz.cvut.cmp.skew;
 
 import org.opencv.core.Mat;
 import org.opencv.highgui.Highgui;
+import org.opencv.imgproc.Imgproc;
 
 public class TestContourSkew {
 
@@ -14,11 +15,14 @@ public class TestContourSkew {
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		
-		Mat img = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png", Highgui.IMREAD_GRAYSCALE);
+
+		Mat img = Highgui.imread("src/main/resources/Arial-Bold-VARIOUS.bin.png", Highgui.IMREAD_GRAYSCALE);
+		Mat skew = new Mat();
+
 		
 		ContourSkewEstimator cs = new ContourSkewEstimator();
-		cs.estimateSkew(img);
+		SkewEstimator.skewImageWBG(img, skew, Math.toRadians(-10));
+		cs.estimateSkew(skew);
 
 	}
 
