@@ -2,17 +2,20 @@ package cz.cvut.cmp.skew;
 
 import static org.opencv.core.Core.bitwise_not;
 
-import java.awt.*;
-import java.awt.Point;
 import java.util.LinkedList;
 import java.util.List;
 
-import nu.pattern.OpenCV;
-import org.opencv.core.*;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
 public class ContourSkewEstimator extends SkewEstimator {
-
+	
+	private boolean debug = true;
 
     @Override
     double estimateSkew(Mat img) {
@@ -31,6 +34,8 @@ public class ContourSkewEstimator extends SkewEstimator {
         Imgproc.drawContours(draw, contours, -1, new Scalar(255, 255, 255));
 
         OCVUtils.showImage(draw);
+        
+        double histogram[] = new double[181];
 
         for (int i = 0; i < contours.size(); i++) {
             MatOfPoint cont = contours.get(i);
@@ -38,11 +43,91 @@ public class ContourSkewEstimator extends SkewEstimator {
             Imgproc.drawContours(draw, contours, i, new Scalar(255, 255, 255));
             OCVUtils.showImage(draw);
             double skewEstimate = estimateContourSkew(cont);
-
-            //TODO voting in histogram ....
+            
+            //voting in histogram ....
+            double angleDeg = skewEstimate + 90;
+            angleDeg = Math.max(0, angleDeg);
+            angleDeg = Math.min(180, angleDeg);
+            
+            histogram[(int) Math.round(angleDeg)] += 1;
+            
         }
+        
+        //smooth the histogram (copy of cpp impl)
+        double histogramSmooth[] = new double[180];
+    	double delta = 3;
+    	int range = (int) (delta * 3);
+    	for(int k=0; k < 180; k++)
+    	{
+    		for (int i = k-range; i <= k+range; i++)
+    		{
+    			int j = i;
+    			if(j < 0) j += 180;
+    			if (j >= 180) j -= 180;
+    			histogramSmooth[k] += histogram[j]/(delta*Math.sqrt(2*Math.PI))*Math.pow(Math.E, -((i - k)*(i - k))/(2*delta*delta));
+    		}
+    	}
+        
+    	int ignoreAngle = 30;
+    	int maxI = 0;
+    	double totalLen = 0;
+    	double maxVal = 0;
+    	for(int i=0; i < 180; i++)
+    	{
+    		if (i > ignoreAngle && i < (180-ignoreAngle))
+    		{
+    			if (histogramSmooth[i] > histogramSmooth[maxI]) maxI = i;
+    			totalLen += histogramSmooth[i];
+    			maxVal = Math.max(maxVal, histogramSmooth[i]);
+    		}
+    	}
 
-        return 0;
+    	int sigma = 3;
+    	range = 3;
+    	double resLen = 0;
+    	for (int i = maxI-sigma*range; i <= maxI+sigma*range; i++)
+    	{
+    		int j = i;
+    		if (j < 0) j = j + 180;
+    		if (j >= 180) j = j - 180;
+    		if (j > ignoreAngle && j < (180-ignoreAngle))
+    		{
+    			resLen += histogramSmooth[j];
+    		}
+    	}
+    	
+    	if(debug){
+    		int histWidth = 180;
+    		int histHeight = 100;
+    		int colWidth = histWidth / 180;
+
+    		Mat histogramImg = Mat.zeros(histHeight, histWidth, org.opencv.core.CvType.CV_8UC3);
+    		//histogramIm = new Scalar(255, 255, 255);
+    		
+    		Core.line(histogramImg, new Point(0, 0), new Point(0, histogramImg.rows()), new Scalar(0, 0, 0) );
+    		Core.line(histogramImg, new Point(90, 0), new Point(90, histogramImg.rows()), new Scalar(0, 0, 0) );
+    		Core.line(histogramImg, new Point(90 + 45, 0), new Point(90 + 45, histogramImg.rows()), new Scalar(100, 100, 100) );
+    		Core.line(histogramImg, new Point(45, 0), new Point(45, histogramImg.rows()), new Scalar(100, 100, 100) );
+    		if(maxVal < 1)
+    			maxVal = 1;
+    		double norm = histHeight / maxVal;
+    		for (int i =0; i < 180; i++) {
+    			int colHeight = (int) (histogramSmooth[i] * norm);
+    			Core.rectangle(histogramImg, new Point(i*colWidth, histHeight), new Point(colWidth*i+colWidth, histHeight-colHeight), new Scalar(255,0,0), Core.FILLED);
+    		}
+    		Core.line(histogramImg, new Point(0, histogramImg.rows() - 1), new Point(180, histogramImg.rows() - 1), new Scalar(100, 100, 100) );
+    		
+    		OCVUtils.showImage(histogramImg);
+    	}
+    	
+    	
+    	double angle = maxI*Math.PI/180-Math.PI/2;
+    	double probability =  (resLen/totalLen);
+    	
+    	System.out.println("Uhel final: " + angle);
+    	
+    	
+        return angle;
     }
 
     @Override
