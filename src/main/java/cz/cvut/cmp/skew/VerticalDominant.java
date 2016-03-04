@@ -162,26 +162,26 @@ public class VerticalDominant extends SkewEstimator {
         Mat img2 = Highgui.imread("C:\\Windows\\Temp\\google4\\Arial-Regular-device.bin.png", Highgui.IMREAD_GRAYSCALE);
         Mat skew = new Mat();
 
-        skewImageWBG(img2, skew, Math.toRadians(-11));
+//        skewImageWBG(img2, skew, Math.toRadians(-11));
 
         // estimate skew
         SkewEstimator est = new VerticalDominant();
-        double skewAngle = est.estimateSkew(skew);
+        double skewAngle = est.estimateSkew(img);
 
         //brent optimizer
         BrentOptimizer minimizer = new BrentOptimizer(1e-2, 1e-3);
-        UnivariateFunction f = new UnivariateVD(skew);
+        UnivariateFunction f = new UnivariateVD(img);
         double val = minimizer.optimize(new MaxEval(200),
                 new UnivariateObjectiveFunction(f),
                 GoalType.MINIMIZE, new SearchInterval(-45, 45)).getPoint();
         int iter3 = minimizer.getIterations();
 
         Mat skew2 = new Mat();
-        skewImageWBG(skew, skew2, Math.toRadians(skewAngle));
+        skewImageWBG(img, skew2, Math.toRadians(skewAngle));
         OCVUtils.showImage(skew2);
 
-        double estimated1 = est.estimateSkew(skew);
-        double estimated2 = est.estimateSkew(skew, -35, 35, 30);
+        double estimated1 = est.estimateSkew(img);
+        double estimated2 = est.estimateSkew(img, -35, 35, 30);
 
 
         System.out.println("Odhad 1: " + estimated1);
