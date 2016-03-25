@@ -38,7 +38,7 @@ public class ContourSkewEstimator extends SkewEstimator {
         Imgproc.findContours(invImg, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
         //podivame se na nalezene kontury:
 
-        double symmetry;
+        double symmetry, correlation;
 
 
         Mat draw = Mat.zeros(new Size(img.cols(), img.rows()), org.opencv.core.CvType.CV_8UC3);
@@ -56,8 +56,9 @@ public class ContourSkewEstimator extends SkewEstimator {
             OCVUtils.showImage(draw);
             double skewEstimate = estimateContourSkew(cont);
             symmetry = estimateSymmetry(cont.toArray(), inv2);
-            calculateCorrelation(img, cont.toArray());
-            //   System.out.println("Symetrie: "+symmetry+" %");
+            correlation = calculateCorrelation(img, cont.toArray());
+            System.out.println("Korelace: " + correlation);
+            System.out.println("Symetrie: " + symmetry + " %");
 
             //voting in histogram ....
             double angleDeg = skewEstimate + 90;
@@ -329,7 +330,6 @@ public class ContourSkewEstimator extends SkewEstimator {
         if (reflections.length != 0) {
             System.out.println("symmetric: " + symmetric);
             symmetry = ((double) (symmetric) / (reflections.length));
-            System.out.println("s: " + symmetry * 100);
 
         }
 
@@ -390,7 +390,6 @@ public class ContourSkewEstimator extends SkewEstimator {
         if (denom != 0)
             correlation = nom / denom;
 
-        System.out.println("Korelace: " + correlation);
         return correlation;
     }
 
@@ -402,7 +401,7 @@ public class ContourSkewEstimator extends SkewEstimator {
         boolean found = false;
         Point n, s, e, w, ne, nw, se, sw;
         int ax; // the value of x on skew axis line in the height of the point
-        int sign; // +1 if the point is on the right side of the axis line, -1 if on the left
+        int sign; // + if the point is on the right side of the axis line, - if on the left
         if (img.get((int) p.y, (int) p.x)[0] > (255 / 2)) {
             return p;
         } else {
