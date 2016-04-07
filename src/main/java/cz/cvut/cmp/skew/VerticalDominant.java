@@ -159,6 +159,7 @@ public class VerticalDominant extends SkewEstimator {
         // read image
 
         Mat img = Highgui.imread("src/main/resources/TimesNewRoman-Italic-sixsided.bin.png", Highgui.IMREAD_GRAYSCALE);
+        OCVUtils.showImage(img);
         Mat img2 = Highgui.imread("C:\\Windows\\Temp\\google4\\Arial-Regular-device.bin.png", Highgui.IMREAD_GRAYSCALE);
         Mat skew = new Mat();
 

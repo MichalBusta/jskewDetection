@@ -56,7 +56,7 @@ public class ContourSkewEstimator extends SkewEstimator {
             OCVUtils.showImage(draw);
             double skewEstimate = estimateContourSkew(cont);
             symmetry = estimateSymmetry(cont.toArray(), inv2);
-            correlation = calculateCorrelation(img, cont.toArray());
+            correlation = calculateCorrelation(inv2, cont.toArray());
             System.out.println("Korelace: " + correlation);
             System.out.println("Symetrie: " + symmetry + " %");
 
@@ -296,6 +296,7 @@ public class ContourSkewEstimator extends SkewEstimator {
     }
 
     public Double estimateSymmetry(Point[] points, Mat img) {
+        System.out.println(img.dump());
         Point[] reflections = findReflections(points);
         drawReflection(reflections, points, img);
         double symmetry;
@@ -303,11 +304,11 @@ public class ContourSkewEstimator extends SkewEstimator {
         symmetric = 0;
         for (int i = 0; i < points.length; i++) {
             if ((int) reflections[i].x < img.cols() && (int) reflections[i].y < img.rows()) {
-                if (img.get((int) reflections[i].y, (int) reflections[i].x)[0] > (255 / 2)) {
+                if (img.get((int) reflections[i].y, (int) reflections[i].x)[0] > 0) {
                     symmetric++;
                 } else {
                     if ((int) reflections[i].x + 1 < img.cols() && (int) reflections[i].y < img.rows()) {
-                        if (img.get((int) reflections[i].y, (int) reflections[i].x + 1)[0] > (255 / 2)) {
+                        if (img.get((int) reflections[i].y, (int) reflections[i].x + 1)[0] > 0) {
                             symmetric++;
                         }
                     }
@@ -316,7 +317,7 @@ public class ContourSkewEstimator extends SkewEstimator {
             } else {
 
                 if ((int) reflections[i].x - 1 < img.cols() && (int) reflections[i].y < img.rows() && (int) reflections[i].x - 1 > 0) {
-                    if (img.get((int) reflections[i].y, (int) reflections[i].x - 1)[0] > (255 / 2)) {
+                    if (img.get((int) reflections[i].y, (int) reflections[i].x - 1)[0] > 0) {
                         symmetric++;
                     }
                 }
@@ -402,7 +403,7 @@ public class ContourSkewEstimator extends SkewEstimator {
         Point n, s, e, w, ne, nw, se, sw;
         int ax; // the value of x on skew axis line in the height of the point
         int sign; // + if the point is on the right side of the axis line, - if on the left
-        if (img.get((int) p.y, (int) p.x)[0] > (255 / 2)) {
+        if (img.get((int) p.y, (int) p.x)[0] > (0)) {
             return p;
         } else {
             // axis: a*x +b*y +c = 0
@@ -421,13 +422,13 @@ public class ContourSkewEstimator extends SkewEstimator {
                 se = new Point(p.x + count, p.y - count);
                 sw = new Point(p.x - count, p.y - count);
                 if ((int) n.y > 0) {
-                    if (img.get((int) n.y, (int) n.x)[0] > (255 / 2)) {
+                    if (img.get((int) n.y, (int) n.x)[0] > (0)) {
 
                         return n;
                     }
                 }
                 if ((int) ne.x < this.maxX && (int) ne.y > 0) {
-                    if (img.get((int) ne.y, (int) ne.x)[0] > (255 / 2)) {
+                    if (img.get((int) ne.y, (int) ne.x)[0] > (0)) {
                         if (a != 0) {
                             ax = (int) ((-b * ne.y - c) / a);
                             if ((ne.x - ax) > 0 == sign > 0) {
@@ -442,7 +443,7 @@ public class ContourSkewEstimator extends SkewEstimator {
                     }
                 }
                 if ((int) nw.x > this.minX && (int) nw.y > 0) {
-                    if (img.get((int) nw.y, (int) nw.x)[0] > (255 / 2)) {
+                    if (img.get((int) nw.y, (int) nw.x)[0] > (0)) {
                         if (a != 0) {
                             ax = (int) ((-b * nw.y - c) / a);
                             if ((nw.x - ax) > 0 == sign > 0) {
@@ -457,12 +458,12 @@ public class ContourSkewEstimator extends SkewEstimator {
                     }
                 }
                 if ((int) s.y < img.rows()) {
-                    if (img.get((int) s.y, (int) s.x)[0] > (255 / 2)) {
+                    if (img.get((int) s.y, (int) s.x)[0] > (0)) {
                         return s;
                     }
                 }
                 if ((int) se.x < this.maxX && (int) se.y < img.rows()) {
-                    if (img.get((int) se.y, (int) se.x)[0] > (255 / 2)) {
+                    if (img.get((int) se.y, (int) se.x)[0] > (0)) {
                         if (a != 0) {
                             ax = (int) ((-b * se.y - c) / a);
                             if ((se.x - ax) > 0 == sign > 0) {
@@ -477,7 +478,7 @@ public class ContourSkewEstimator extends SkewEstimator {
                     }
                 }
                 if ((int) sw.x > this.minX && (int) sw.y < img.rows()) {
-                    if (img.get((int) sw.y, (int) sw.x)[0] > (255 / 2)) {
+                    if (img.get((int) sw.y, (int) sw.x)[0] > (0)) {
                         if (a != 0) {
                             ax = (int) ((-b * sw.y - c) / a);
                             if ((sw.x - ax) > 0 == sign > 0) {
@@ -492,7 +493,7 @@ public class ContourSkewEstimator extends SkewEstimator {
                     }
                 }
                 if ((int) e.x < this.maxX) {
-                    if (img.get((int) e.y, (int) e.x)[0] > (255 / 2)) {
+                    if (img.get((int) e.y, (int) e.x)[0] > (0)) {
                         if (a != 0) {
                             ax = (int) ((-b * e.y - c) / a);
                             if ((e.x - ax) > 0 == sign > 0) {
@@ -507,7 +508,7 @@ public class ContourSkewEstimator extends SkewEstimator {
                     }
                 }
                 if ((int) w.x > this.minX) {
-                    if (img.get((int) w.y, (int) w.x)[0] > (255 / 2)) {
+                    if (img.get((int) w.y, (int) w.x)[0] > (0)) {
                         if (a != 0) {
                             ax = (int) ((-b * w.y - c) / a);
                             if ((w.x - ax) > 0 == sign > 0) {

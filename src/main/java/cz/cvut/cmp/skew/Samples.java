@@ -70,12 +70,12 @@ public class Samples {
         plot.setName("The relation between skew angle and entropy of an image"); //not sure what this is supposed to do
 
 
-        //customize the x axis
+        //customize the x axisVector
         plot.setFixedBounds(1, -45, 45);
         plot.setAxisLabel(0, "ANGLE");
 
 
-        // cusotmize the y axis
+        // cusotmize the y axisVector
         plot.setFixedBounds(1, 4.2, 4.8);
         plot.setAxisLabel(1, "ENTROPY");
         
@@ -120,10 +120,10 @@ public class Samples {
         Plot2DPanel plot = new Plot2DPanel();
         plot.addLinePlot("Vertical projection profiles", x, y);
 
-        //customize the x axis
+        //customize the x axisVector
         plot.setFixedBounds(0, 0, 105);
 
-        // cusotmize the y axis (intervals)
+        // cusotmize the y axisVector (intervals)
 
 
         JFrame frame = new JFrame("a plot panel");
