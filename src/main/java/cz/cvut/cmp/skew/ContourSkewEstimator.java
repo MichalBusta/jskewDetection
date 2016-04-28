@@ -20,6 +20,8 @@ public class ContourSkewEstimator extends SkewEstimator {
     double[] axisVector; // the axisVector line vector
     int[] a; // coordinates of a point that lies on the axisVector line
     double minX, maxX; // the constraints of the contour
+    Mat image = new Mat();
+    Point[] points;
 
 
     @Override
@@ -30,7 +32,7 @@ public class ContourSkewEstimator extends SkewEstimator {
         bitwise_not(img, invImg);
         Mat inv2 = new Mat();
         bitwise_not(img, inv2);
-        OCVUtils.showImage(inv2);
+        this.image = inv2;
 
         List<MatOfPoint> contours = new LinkedList<MatOfPoint>();
         Mat hierarchy = new Mat();
@@ -38,27 +40,22 @@ public class ContourSkewEstimator extends SkewEstimator {
         Imgproc.findContours(invImg, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_NONE);
         //podivame se na nalezene kontury:
 
-        double symmetry, correlation;
+        double symmetry, correlation, correlation2;
 
 
         Mat draw = Mat.zeros(new Size(img.cols(), img.rows()), org.opencv.core.CvType.CV_8UC3);
         Imgproc.drawContours(draw, contours, -1, new Scalar(255, 255, 255));
 
-        OCVUtils.showImage(draw);
-
         double histogram[] = new double[181];
 
         for (int i = 0; i < contours.size(); i++) {
             MatOfPoint cont = contours.get(i);
-            System.out.println();
+            //   System.out.println();
             draw = Mat.zeros(new Size(img.cols(), img.rows()), org.opencv.core.CvType.CV_8UC3);
             Imgproc.drawContours(draw, contours, i, new Scalar(255, 255, 255));
-            OCVUtils.showImage(draw);
+            //   OCVUtils.showImage(draw);
             double skewEstimate = estimateContourSkew(cont);
-            symmetry = estimateSymmetry(cont.toArray(), inv2);
-            correlation = calculateCorrelation(inv2, cont.toArray());
-            System.out.println("Korelace: " + correlation);
-            System.out.println("Symetrie: " + symmetry + " %");
+            this.points = cont.toArray();
 
             //voting in histogram ....
             double angleDeg = skewEstimate + 90;
@@ -94,6 +91,7 @@ public class ContourSkewEstimator extends SkewEstimator {
             }
         }
 
+
         int sigma = 3;
         range = 3;
         double resLen = 0;
@@ -127,14 +125,14 @@ public class ContourSkewEstimator extends SkewEstimator {
             }
             Core.line(histogramImg, new Point(0, histogramImg.rows() - 1), new Point(180, histogramImg.rows() - 1), new Scalar(100, 100, 100));
 
-            OCVUtils.showImage(histogramImg);
+            //  OCVUtils.showImage(histogramImg);
         }
 
 
         double angle = maxI * Math.PI / 180 - Math.PI / 2;
         double probability = (resLen / totalLen);
 
-        System.out.println("Uhel final: " + angle);
+        // System.out.println("Uhel final: " + angle);
 
 
         return angle;
@@ -164,7 +162,7 @@ public class ContourSkewEstimator extends SkewEstimator {
         uy = 0;
         double[] vVector = getSkewVector(points);
         if (vVector == null) {
-            System.out.println("Moc maly znak. \n");
+            //   System.out.println("Moc maly znak. \n");
             return 0; // ?? Vratit nejakou smysluplnou hodnotu
         }
         vx = vVector[0];
@@ -173,8 +171,6 @@ public class ContourSkewEstimator extends SkewEstimator {
         result = Math.acos(((ux * vx) + (uy * vy)) / ((Math.sqrt((ux * ux) + (uy * uy))) * ((Math.sqrt((vx * vx) + (vy * vy))))));
         result = (90 - Math.toDegrees(result));
 
-        System.out.println("Uhel: " + result);
-        System.out.println();
         return result;
     }
 
@@ -286,17 +282,19 @@ public class ContourSkewEstimator extends SkewEstimator {
         this.minX = MinWidth;
         this.maxX = MaxWidth;
 
+        /**
         System.out.println("Sirka:" + MinWidth + "-" + MaxWidth + "; Vyska: " + MinHeight + "-" + MaxHeight);
         System.out.println("Nejvyssi:" + topMost + "; Nejnizsi: " + bottomMost);
         System.out.println("Horni... Vpravo:" + rightmostTop + " vlevo:" + leftmostTop);
         System.out.println("Dolni... Vpravo:" + rightmostBottom + " dole:" + leftmostBottom);
         System.out.println("Vx a vy: " + skewVector[0] + "; " + skewVector[1]);
+         */
         axisVector = skewVector;
         return skewVector;
     }
 
     public Double estimateSymmetry(Point[] points, Mat img) {
-        System.out.println(img.dump());
+
         Point[] reflections = findReflections(points);
         drawReflection(reflections, points, img);
         double symmetry;
@@ -329,7 +327,7 @@ public class ContourSkewEstimator extends SkewEstimator {
 
         symmetry = 0;
         if (reflections.length != 0) {
-            System.out.println("symmetric: " + symmetric);
+            //  System.out.println("symmetric: " + symmetric);
             symmetry = ((double) (symmetric) / (reflections.length));
 
         }
@@ -340,7 +338,7 @@ public class ContourSkewEstimator extends SkewEstimator {
 
     public Double calculateCorrelation(Mat img, Point[] points) {
         int px, py, ax, ay; // p is a point on the axis, a is a point of the contour
-        double sumX, sumY, meanX, meanY; //x is the
+        double meanX, meanY; //
         double a, b, c, correlation;
         double[] xValues = new double[points.length]; // the distance between the point of the contour and the axis
         double[] yValues = new double[points.length]; // distance between the point of the contour closest to the reflection of another point of the contour
@@ -369,6 +367,63 @@ public class ContourSkewEstimator extends SkewEstimator {
             closest = findClosestPointDist(reflections[i], img);
             // System.out.println("Bod:" + ax + "; " + ay + " ... Odraz: " + reflections[i].x + "; " + reflections[i].y + " ... Nejblizsi k odrazu: " + closest.x + "; " + closest.y);
             yValues[i] = (Math.abs((a * closest.x) + (b * closest.y) + c)) / (Math.sqrt((a * a) + (b * b))); // distance between the point closest to a and the axis
+            meanY += yValues[i];
+        }
+        if (xValues.length > 0) {
+            meanX = meanX / xValues.length;
+            meanY = meanY / yValues.length;
+        }
+        double nom = 0;
+        double denom;
+        double denomA = 0;
+        double denomB = 0;
+
+        for (int i = 0; i < xValues.length; i++) {
+            nom += (xValues[i] - meanX) * (yValues[i] - meanY);
+            denomA += (xValues[i] - meanX) * (xValues[i] - meanX);
+            denomB += (yValues[i] - meanY) * (yValues[i] - meanY);
+        }
+        denom = Math.sqrt(denomA * denomB);
+
+        correlation = 0;
+        if (denom != 0)
+            correlation = nom / denom;
+
+        return correlation;
+    }
+
+    public Double calculateCorrelation2(Mat img, Point[] points) {
+        double meanX, meanY; //x is the
+        double correlation;
+        double[] xValues = new double[points.length]; // the value of the point of the contour
+        double[] yValues = new double[points.length]; // value of the reflection of a pint that lies on the contour
+
+        Point[] reflections;
+        reflections = findReflections(points);
+
+        meanX = 0;
+        meanY = 0;
+        for (int i = 0; i < reflections.length; i++) {
+            xValues[i] = Math.abs(img.get((int) points[i].y, (int) points[i].x)[0]);
+            meanX += xValues[i];
+            if (Math.abs(img.get((int) reflections[i].y, (int) reflections[i].x)[0]) > 0) {
+                yValues[i] = Math.abs(img.get((int) reflections[i].y, (int) reflections[i].x)[0]);
+            } else {
+                if (reflections[i].x + 1 < img.cols()) {
+                    if (Math.abs(img.get((int) reflections[i].y, (int) reflections[i].x + 1)[0]) > 0) {
+                        yValues[i] = Math.abs(img.get((int) reflections[i].y + 1, (int) reflections[i].x)[0]);
+                    }
+                } else {
+                    if (reflections[i].x - 1 >= 0) {
+                        if (Math.abs(img.get((int) reflections[i].y, (int) reflections[i].x - 1)[0]) > 0) {
+                            yValues[i] = Math.abs(img.get((int) reflections[i].y, (int) reflections[i].x - 1)[0]);
+                        }
+                    } else {
+                        yValues[i] = Math.abs(img.get((int) reflections[i].y, (int) reflections[i].x)[0]);
+                    }
+                }
+            }
+
             meanY += yValues[i];
         }
         if (xValues.length > 0) {
@@ -538,7 +593,6 @@ public class ContourSkewEstimator extends SkewEstimator {
             draw.put((int) points[a].y, (int) points[a].x, data);
             draw.put((int) original[a].y, (int) original[a].x, data);
         }
-        OCVUtils.showImage(draw);
     }
 
     public Point[] findReflections(Point[] points) {
